@@ -29,6 +29,8 @@ class Game(Frame):
         BAD_GRABBABLE = "I can't grab that"
         BAD_ITEM = "I don't see that item"
         BAD_INSPECT = "I can't inspect that"
+        DOOR_UNLOCKED = "The door is unlocked"
+        DOOR_LOCKED = "The door is locked"
         
     # Game dimensions
     WIDTH = 800
@@ -98,11 +100,11 @@ class Game(Frame):
         r4.add_grabbable("note")
         r4.add_grabbable("key")
         
-        #Add lookables to the rooms -COME BACK TO THIS
-        r1.add_lookable("tv", os.path.join("images","tv_inspect.gif"))
-        r2.add_lookable("knife", os.path.join("images","knife_inspect.gif"))
-        r3.add_lookable("book", os.path.join("images","book_inspect.gif")) # "The book is written in a strange language. You can't read it."
-        r4.add_lookable("note", os.path.join("images","note_inspect.gif")) # "You've made it far in my strange game. I'm impressed. But you won't make it out alive. -The Game Master
+        #Add inspectables to the rooms -COME BACK TO THIS
+        r1.add_inspectable("tv", os.path.join("images","tv_inspect.png"))
+        r2.add_inspectable("knife", os.path.join("images","knife_inspect.gif"))
+        r3.add_inspectable("book", os.path.join("images","book_inspect.gif")) # "The book is written in a strange language. You can't read it."
+        r4.add_inspectable("note", os.path.join("images","note_inspect.gif")) # "You've made it far in my strange game. I'm impressed. But you won't make it out alive. -The Game Master
         
         # Set the starting room for the game
         self.current_room = r1
@@ -144,21 +146,32 @@ class Game(Frame):
         text_container.pack_propagate(False) # Prevent resizing
 
 
+    def set_image(self):
+        if self.current_room is None:
+            img = PhotoImage(file="images/skull.gif")
+        elif self.current_room == "Death":
+            img = PhotoImage(file="images/skull.gif")
+        else:
+            img = PhotoImage(file=self.current_room.image)
+
+        # Update the image container with the new room image
+        self.image_container.config(image=img)
+        self.image_container.image = img  # Keep a reference to prevent garbage collection
 
     
-    def set_image(self):
-        if self.current_room == None:
-            img = PhotoImage(file = "images/skull.gif")
+    # def set_image(self):
+    #     if self.current_room == None:
+    #         img = PhotoImage(file = "images/skull.gif")
         
-        elif self.current_room == "Death":
-            img = PhotoImage(file = "images/skull.gif")
+    #     elif self.current_room == "Death":
+    #         img = PhotoImage(file = "images/skull.gif")
             
-        else:
-            img = PhotoImage(file = self.current_room.image)
+    #     else:
+    #         img = PhotoImage(file = self.current_room.image)
         
         
-        self.image_container.config(image = img)
-        self.image_container.image = img
+    #     self.image_container.config(image = img)
+    #     self.image_container.image = img
     
     def set_status(self, status:str):
         self.text.config(state = NORMAL) # Make the text editable
@@ -177,17 +190,56 @@ class Game(Frame):
     def clear_entry(self):
         self.player_input.delete(0,END)
     
+    # def handle_go(self, destination):
+    #     if Room.Key in self.inventory:
+    #         print("Key found in inventory")
+    #         Room.Key.door_unlocked = True
+    #         status = Game.Status.DOOR_UNLOCKED
+    #         if destination in self.current_room.exits:
+    #             self.current_room = self.current_room.exits[destination]
+    #             status = Game.Status.ROOM_CHANGE
+        
+    #     elif not Room.Key.door_unlocked:
+    #         print("Key not found in inventory")
+    #         status = Game.Status.DOOR_LOCKED
+        
+    #     else:
+    #         status = Game.Status.BAD_EXIT
+    #         print(not Room.Key.door_unlocked)
+    #         print(Room.Key in self.inventory)
+    
     def handle_go(self, destination):
-        status = Game.Status.BAD_EXIT
-        if Room.Key.door_unlocked == True and isinstance(Room.Key) in self.inventory:
+        # Check if the key is in the inventory
+        if Room.Key in self.inventory:
+            print("Key found in inventory")
+            Room.Key.door_unlocked = True
+            status = Game.Status.DOOR_UNLOCKED
+
+            # If the destination exists in the current room's exits
             if destination in self.current_room.exits:
                 self.current_room = self.current_room.exits[destination]
                 status = Game.Status.ROOM_CHANGE
+            else:
+                status = Game.Status.BAD_EXIT
+                print("Invalid exit:", destination)
+        
+        # If the door is locked and the player does not have the key
+        elif not Room.Key.door_unlocked:
+            print("Key not found in inventory")
+            status = Game.Status.DOOR_LOCKED
+
+        # If neither condition is met, it's likely an invalid exit
+        else:
+            status = Game.Status.BAD_EXIT
+            print("Neither key found in inventory nor door unlocked")
+
+        # Set the final status and update the image
         self.set_status(status)
         self.set_image()
-        
-        if Room.Key.door_unlocked == False:
-            self.set_status("The door is locked. You need a key.")
+
+
+        # self.set_status(status)
+        # self.set_image()
     
     def handle_look(self, item):
         status = Game.Status.BAD_ITEM
@@ -203,26 +255,89 @@ class Game(Frame):
             status = Game.Status.GRABBED
         self.set_status(status)
         
-    def handle_inspect(self, lookable):
+        
+############################################################################################################################################################################
+    # Need to edit the exit_inspect function to handle the Escape key press
+    # Needed changes are between the hash-lines
+    # @dieg00tfb @ALittleRustyyy @SonofCar33        
+        
+    def handle_inspect(self, inspectable):
         self.inspected = False
         status = Game.Status.BAD_INSPECT
-        if lookable in self.current_room.lookable and self.current_room.inspect_img != None:
+        if inspectable in self.current_room.inspectables and self.current_room.inspect_img is not None:
             self.inspected = True
-            img = PhotoImage(file = self.current_room.lookable[lookable])
-            self.image_container.config(image = img)
+            print(f"Inspecting {inspectable}")
+            img = PhotoImage(file=self.current_room.inspectables[inspectable])
+            self.image_container.config(image=img)
             self.image_container.image = img
-
-            def exit_inspect(event):
-                if self.inspected == True:
-                    Room.Key.unlock_door()
-                    Room.Key.create_key()
-                self.set_image()
-                self.image_container.unbind("<Escape>")
-
-            self.image_container.bind("<Escape>", exit_inspect)
-            
         else:
             self.status = Game.Status.BAD_INSPECT
+            
+            
+    # @dieg00tfb @ALittleRustyyy @SonofCar33  
+    # This is currently wrong, but I'm trying to bind the Escape key to the exit_inspect function. 
+    # It should only work when the player is in inspect mode. Maybe we can use a flag to check if the player is in inspect mode.         
+    def exit_inspect(self):
+        print("Exiting inspect mode")
+        if self.inspected:
+            Room.Key.create_key(f"key-{self.current_room}")
+            print(f"Key created for {self.current_room}")
+        self.set_image()
+        self.inspected = False
+        
+        
+        
+
+    # @dieg00tfb @ALittleRustyyy @SonofCar33
+    # Wrong implementation, the above code is more right
+# Failed Try #1    
+    # def exit_inspect(event):
+    #     print("Exiting inspect mode")
+    #     if self.inspected:
+    #         # Room.Key.create_key is used to create or unlock a key
+    #         Room.Key.create_key(f"key-{self.current_room}")
+    #         print(f"Key created for {self.current_room}")
+    #     # Reset the image to the room image
+    #     self.set_image()  
+    #     # Unbind the Escape key after use
+    #     self.image_container.unbind("<Escape>")
+
+    # # Bind the Escape key to the exit_inspect function
+    # self.image_container.bind("<Escape>", exit_inspect)
+    
+# Failed Try #2   
+# def handle_inspect(self, inspectable):
+#     self.inspected = False  # Set inspected to False initially
+#     status = Game.Status.BAD_INSPECT
+#     if inspectable in self.current_room.inspectables and self.current_room.inspect_img is not None:
+#         self.inspected = True
+#         print(f"Inspecting {inspectable}")
+#         img = PhotoImage(file=self.current_room.inspectables[inspectable])
+#         self.image_container.config(image=img)
+#         self.image_container.image = img
+
+#         # Define the exit_inspect function to handle inspect mode exit
+#         def exit_inspect():
+#             print("Exiting inspect mode")
+#             if self.inspected:
+#                 # Room.Key.create_key is used to create or unlock a key
+#                 Room.Key.create_key(f"key-{self.current_room}")
+#                 print(f"Key created for {self.current_room}")
+#             # Reset the image to the room image
+#             self.set_image()  
+#             # Set inspected to False to allow program to continue
+#             self.inspected = False
+
+#         # Wait for the player to press Enter to exit inspect mode
+#         print("Press Enter to exit inspect mode.")
+#         input()  # This waits until the player presses Enter
+#         exit_inspect()  # Call the exit_inspect function after input
+
+#     else:
+#         self.status = Game.Status.BAD_INSPECT
+
+
+############################################################################################################################################################################
     
     # Can consider adding functions like eat, drink, etc.
     

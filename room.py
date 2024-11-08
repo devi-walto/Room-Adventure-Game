@@ -11,6 +11,7 @@ class Room:
         self.exits:dict[str,'Room'] = {}
         self.items:dict[str,str] = {}
         self.grabbables = []
+        self.inspectables: dict[str, str] = {}
         
     def add_exit(self, direction:str, room:'Room | None') -> None:
         """
@@ -29,9 +30,10 @@ class Room:
     def delete_grabbable(self, item:str):
         self.grabbables.remove(item)
         
-    def add_lookable(self, lookable:str, inspect_img:str = None) -> None:
-        self.lookable = lookable
+    def add_inspectable(self, inspectable:str, inspect_img:str = None) -> None:
+        self.inspectable = inspectable
         self.inspect_img = inspect_img
+        self.inspectables[inspectable] = inspect_img
 
         
     class Key:
@@ -50,8 +52,9 @@ class Room:
             
         def create_key(self, key:str) -> str:
             self.key = key
-            Room.add_grabbable(self.key)
             Room.add_item(self.key, "A key that unlocks the door")
+            Room.add_grabbable(self.key)
+            
         
 
     
