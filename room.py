@@ -34,6 +34,15 @@ class Room:
         self.inspectable = inspectable
         self.inspect_img = inspect_img
         self.inspectables[inspectable] = inspect_img
+        
+    
+    def create_key(self, key_label: str) -> None:
+        # Create a Key object and add it to this room
+        print("Creating key")
+        key = Room.Key(key_label, self)
+        self.add_item(key.key, "A key that unlocks the door")
+        self.add_grabbable(key.key)
+        
 
         
     class Key:
@@ -50,12 +59,13 @@ class Room:
             if self.key in Room.grabbables:
                 self._door_unlocked = True
             
-        def create_key(self, key:str) -> str:
-            self.key = key
-            Room.add_item(self.key, "A key that unlocks the door")
-            Room.add_grabbable(self.key)
+        def __str__(self) -> str:
+            return f"k{self.key}"
+        # def create_key(self, key:str) -> str:
+        #     self.key = key
+        #     Room.add_item(self.key, "A key that unlocks the door")
+        #     Room.add_grabbable(self.key)
             
-        
 
     
     def __str__(self) -> str:

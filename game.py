@@ -31,6 +31,7 @@ class Game(Frame):
         BAD_INSPECT = "I can't inspect that"
         DOOR_UNLOCKED = "The door is unlocked"
         DOOR_LOCKED = "The door is locked"
+        NEW_KEY = "A new key has been created"
         
     # Game dimensions
     WIDTH = 800
@@ -102,9 +103,9 @@ class Game(Frame):
         
         #Add inspectables to the rooms -COME BACK TO THIS
         r1.add_inspectable("tv", os.path.join("images","tv_inspect.png"))
-        r2.add_inspectable("knife", os.path.join("images","knife_inspect.gif"))
-        r3.add_inspectable("book", os.path.join("images","book_inspect.gif")) # "The book is written in a strange language. You can't read it."
-        r4.add_inspectable("note", os.path.join("images","note_inspect.gif")) # "You've made it far in my strange game. I'm impressed. But you won't make it out alive. -The Game Master
+        r2.add_inspectable("knife", os.path.join("images","knife_inspect.png"))
+        r3.add_inspectable("book", os.path.join("images","book_inspect.png")) # "The book is written in a strange language. You can't read it."
+        r4.add_inspectable("note", os.path.join("images","note_inspect.png")) # "You've made it far in my strange game. I'm impressed. But you won't make it out alive. -The Game Master
         
         # Set the starting room for the game
         self.current_room = r1
@@ -210,7 +211,7 @@ class Game(Frame):
     
     def handle_go(self, destination):
         # Check if the key is in the inventory
-        if Room.Key in self.inventory:
+        if "key" in self.inventory:
             print("Key found in inventory")
             Room.Key.door_unlocked = True
             status = Game.Status.DOOR_UNLOCKED
@@ -219,6 +220,8 @@ class Game(Frame):
             if destination in self.current_room.exits:
                 self.current_room = self.current_room.exits[destination]
                 status = Game.Status.ROOM_CHANGE
+                if "key" in self.inventory:
+                    self.inventory.remove("key")
             else:
                 status = Game.Status.BAD_EXIT
                 print("Invalid exit:", destination)
@@ -270,20 +273,27 @@ class Game(Frame):
             img = PhotoImage(file=self.current_room.inspectables[inspectable])
             self.image_container.config(image=img)
             self.image_container.image = img
+            
         else:
             self.status = Game.Status.BAD_INSPECT
-            
+            self.set_status(status)
+        self.image_container.bind("<Escape>", self.exit_inspect)
             
     # @dieg00tfb @ALittleRustyyy @SonofCar33  
     # This is currently wrong, but I'm trying to bind the Escape key to the exit_inspect function. 
     # It should only work when the player is in inspect mode. Maybe we can use a flag to check if the player is in inspect mode.         
-    def exit_inspect(self):
+    def exit_inspect(self, event=None):
         print("Exiting inspect mode")
-        if self.inspected:
-            Room.Key.create_key(f"key-{self.current_room}")
+        if self.inspected == True:
+            self.current_room.create_key("key")
             print(f"Key created for {self.current_room}")
+            self.current_room.add_grabbable("key")
+            
+
         self.set_image()
         self.inspected = False
+        status = Game.Status.NEW_KEY
+        self.set_status(status)
         
         
         
