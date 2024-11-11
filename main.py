@@ -1,4 +1,4 @@
-# Name: Devin Walton
+# Name: Devin Walton, Austin Lucas, Diego Arreola
 """
 @dieg00tfb @ALittleRustyyy @SonofCar33
 Possible Features and Improvements:
