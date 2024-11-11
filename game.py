@@ -103,7 +103,7 @@ class Game(Frame):
         
         #Add inspectables to the rooms -COME BACK TO THIS
         r1.add_inspectable("tv", os.path.join("images","tv_inspect.png"))
-        r2.add_inspectable("knife", os.path.join("images","knife_inspect.png"))
+        r2.add_inspectable("knife", os.path.join("images","knife.png"))
         r3.add_inspectable("book", os.path.join("images","book_inspect.png")) # "The book is written in a strange language. You can't read it."
         r4.add_inspectable("note", os.path.join("images","note_inspect.png")) # "You've made it far in my strange game. I'm impressed. But you won't make it out alive. -The Game Master
         
